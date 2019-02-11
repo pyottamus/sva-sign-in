@@ -1,5 +1,5 @@
 #--------------------------------
-# Developed in May-November 2018 by Ethan Adams and Caedmon DelVecchio of the Silicon Iniative,
+# Developed in May-November 2018 by Caedmon DelVecchio and Ethan Adams of the Silicon Iniative,
 # as part of the Berks Technology Club at Penn State Berks
 #--------------------------------
 
@@ -15,6 +15,7 @@ from httplib2 import Http
 from oauth2client import file, client, tools
 
 mGui = Tk()
+mGui.configure(background='black')
 
 # ------------ TODO -----------------
 #1. Admin ability to add users from the touchscreen
@@ -22,15 +23,19 @@ mGui = Tk()
 #3. Add specified exceptions for errors
 
 #--------- VARIABLES ----------------
-SPREADSHEET_ID = '1OsN-XN1tVNAyjf7WQ0eikhpjfLxxzEqtGfZOGDefulY' # Google spreadsheet ID
+SPREADSHEET_ID = '1s_sDHTkszlyCfYpq0dzmRUKKdet7kHbf7WKMGAGZR3I' # Google spreadsheet ID
 CLIENT_SECRET_FILEPATH = 'client_secret.json' # Path for the OAuth file provided by Google for the API
 STUDENT_JSON_FILEPATH = 'members.json' # Path to JSON file to load student data
-APP_FULLSCREEN = True # If true, application runs in fullscreen
+APP_FULLSCREEN = False # If true, application runs in fullscreen
 
 signedOutDict = {} # Users signed out {studentID: {lName, Fname}}
 signedInDict = {} # Users signed in {studentID: [updateRange, lName, Fname]}
 
 # -------- FUNCTIONS ----------------
+
+#def hide(choice):
+#        idTextBox.grid_remove()
+
 def signIn(studentID):
     try:
         student = signedOutDict[studentID]
@@ -57,7 +62,7 @@ def signIn(studentID):
     updateResultRange = result.get('updates')["updatedRange"].replace("A", "E").replace("D", "F") # Modify range used for sign out later
     signedInDict[studentID] = {"updateRange": updateResultRange, "lName": student["lName"], "fName": student["fName"]} # Add student to logged in dict
     signedOutDict.pop(studentID) # Remove student from signed out dictionary
-    print('{0} cells appended.'.format(result.get('updatedCells')))
+    print('{0} cells appended.'.format(result.get('updatedCells')));
     print(activeStudent + " signed in at " + timestamp.strftime("%x %X"))
     print(signedInDict)
     idTextBox.delete(0, END) # Clear text field for next entry
@@ -89,7 +94,7 @@ def signOut(studentID):
     # Output Result
     signedOutDict[studentID] = {"lName": student["lName"], "fName": student["fName"]} # Add student to logged in dict
     signedInDict.pop(studentID) # Remove student from signed in dictionary
-    print('{0} cells updated.'.format(result.get('updatedCells')))
+    print('{0} cells updated.'.format(result.get('updatedCells')));
     print(str(student["lName"]) + ", " + str(student["fName"]) + " signed out at " + timestamp.strftime("%x %X"))
     idTextBox.delete(0, END) # Clear text field for next entry
     idTextBox.focus() # Apply focus to entry field
@@ -98,9 +103,11 @@ def updateClock(): # Update date and time labels every minutes
     #Update time label
     timeString = datetime.datetime.now().strftime("%H:%M")
     timeLabel.configure(text = timeString)
+    timeLabel.configure(background='black', foreground="white")
     # Update date label
     dateString = datetime.datetime.now().strftime("%B %dth, %Y")
     dateLabel.configure(text = dateString)
+    dateLabel.configure(background='black', foreground="white")
 
     mGui.after(60000, updateClock) # Run function every minute in the tkinter mainloop
 
@@ -109,7 +116,7 @@ def callback(sv):
     idEntryText = idTextBox.get()
 
     # If the input is long enough to contain the ID from the card
-    if (len(idEntryText) >= 20):
+    if (len(idEntryText) >= 59):
         print(idEntryText[2:11])
         if (idEntryText[2:11] in signedOutDict):
             print("signedOutDict")
@@ -161,14 +168,17 @@ timeLabel.pack(anchor = "center")
 #Instructions
 instructLabel = Label(mGui, text="SWIPE YOUR STUDENT ID", font = 'Helvetica 20 bold')
 instructLabel.pack(anchor = "center", pady = (30, 0))
+instructLabel.configure(background='black', foreground="red")
 
 #Outside Room
 outside = Label(mGui, text = "Signed Out", font = 'Helvetica 10 bold')
 outside.place(x=50, y=0)
+outside.configure(background='black', foreground="white")
 
 #Student List
 outListbox = Listbox(mGui, font = 12)
 outListbox.place(x=15, y=20, height=420, width=150)
+outListbox.configure(background='black', foreground="white", highlightcolor="blue", highlightbackground="blue")
 
 #Penn State ID Text Box
 sv = StringVar()
@@ -176,8 +186,9 @@ sv.trace("w", lambda name, index, mode, sv=sv: callback(sv))
 idTextBox = Entry(mGui, show="*", text='PSU ID', textvariable=sv)
 idTextBox.config(state=NORMAL)
 idTextBox.pack(anchor = "center")
+idTextBox.configure(background='black', foreground="white")
 
-##SIGN IN
+#SIGN IN
 #mbutton = Button(mGui, text = 'SIGN IN', command = signin, font = 'Helvetica 30 bold', fg = 'black', bg='#c4c4c4')
 #mbutton.pack(anchor = "center")
 
@@ -185,6 +196,7 @@ idTextBox.pack(anchor = "center")
 image = PhotoImage(file="Logo.png") # Load image
 banner = Label(image=image)
 banner.pack(anchor = "center", pady = (15, 15))
+banner.configure(background='black', foreground="white")
 
 #Clear Entry
 button2 = Button(mGui, text = 'CLEAR ENTRY', command = clearEntry, font = 'Helvetica 30 bold', fg = 'black', bg='#c4c4c4')
@@ -193,16 +205,19 @@ button2.pack(anchor = "center")
 #Inside Room
 inside = Label(mGui, text = "Signed In", font = 'Helvetica 10 bold')
 inside.place(x=675, y=0)
+inside.configure(background='black', foreground="white")
 
 #inListbox
 inListbox = Listbox(mGui, font = 12)
 inListbox.place(x=635, y=20, height=420, width=150)
+inListbox.configure(background='black', foreground="white", highlightcolor="blue", highlightbackground="blue")
 
 for items in signedOutDict.items():
     outListbox.insert(END, items[1]["lName"] + ", " + items[1]["fName"])
 
 idTextBox.focus() # Apply focus to entry field
 
-mGui.attributes("-fullscreen", APP_FULLSCREEN)
+mGui.attributes("-fullscreen",APP_FULLSCREEN)
 mGui.after(1000, updateClock) # Begin updating clock datetime loop
+mGui.config(cursor="none")
 mGui.mainloop()
