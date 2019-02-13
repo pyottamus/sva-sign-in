@@ -23,7 +23,7 @@ mGui.configure(background='black')
 #3. Add specified exceptions for errors
 
 #--------- VARIABLES ----------------
-SPREADSHEET_ID = '1s_sDHTkszlyCfYpq0dzmRUKKdet7kHbf7WKMGAGZR3I' # Google spreadsheet ID
+SPREADSHEET_ID = '1PePbDjFYSs-XhJ7S470KEMO85hgEcNa9AyNE5a2nTNQ' # Google spreadsheet ID
 CLIENT_SECRET_FILEPATH = 'client_secret.json' # Path for the OAuth file provided by Google for the API
 STUDENT_JSON_FILEPATH = 'members.json' # Path to JSON file to load student data
 APP_FULLSCREEN = False # If true, application runs in fullscreen
@@ -52,21 +52,24 @@ def signIn(studentID):
     activeStudentIndex = outListbox.get(0,END).index(activeStudent)
     inListbox.insert(END, activeStudent) # Inserts selected student to Signed In list
     outListbox.delete(activeStudentIndex) # Deletes selected student from Signed Out list
+    signedInDict[studentID] = {"lName": student["lName"], "fName": student["fName"]} # Add student to logged in dict
+    signedOutDict.pop(studentID) # Remove student from signed out dictionary
+    idTextBox.delete(0, END) # Clear text field for next entry
+    idTextBox.focus() # Apply focus to entry field
     
     # Add values to spreadsheet
     body = { 'values' : [[student["lName"], student["fName"], timestamp.strftime("%x"), timestamp.strftime("%X")]]} # [Student Fname, Student Lname, Date, Time]
     range = "A1:D1" # Range of table to append to
     result = service.spreadsheets().values().append(spreadsheetId=SPREADSHEET_ID, range=range, valueInputOption='RAW', body=body).execute() # Execute spreadsheet update
 
-    # Output result
+    # Store spreadsheet range for student
     updateResultRange = result.get('updates')["updatedRange"].replace("A", "E").replace("D", "F") # Modify range used for sign out later
-    signedInDict[studentID] = {"updateRange": updateResultRange, "lName": student["lName"], "fName": student["fName"]} # Add student to logged in dict
-    signedOutDict.pop(studentID) # Remove student from signed out dictionary
-    print('{0} cells appended.'.format(result.get('updatedCells')));
+    signedInDict[studentID].update({"updateRange": updateResultRange})
+
+    # Output result
+    print('{0} cells appended.'.format(result.get('updatedCells')))
     print(activeStudent + " signed in at " + timestamp.strftime("%x %X"))
-    print(signedInDict)
-    idTextBox.delete(0, END) # Clear text field for next entry
-    idTextBox.focus() # Apply focus to entry field
+    
 
 def signOut(studentID):
     studentID = idTextBox.get()[2:11] # Get substring of ID read from ID card
@@ -85,6 +88,10 @@ def signOut(studentID):
     activeStudentIndex = inListbox.get(0,END).index(activeStudent)
     outListbox.insert(END, activeStudent) # Deletes selected student from Signed In list
     inListbox.delete(activeStudentIndex) # Inserts selected student to Signed Out list
+    signedOutDict[studentID] = {"lName": student["lName"], "fName": student["fName"]} # Add student to logged in dict
+    signedInDict.pop(studentID) # Remove student from signed in dictionary
+    idTextBox.delete(0, END) # Clear text field for next entry
+    idTextBox.focus() # Apply focus to entry field
 
     # Add values to spreadsheet
     body = { 'values' : [[timestamp.strftime("%x"), timestamp.strftime("%X")]]} # Time signed out
@@ -92,12 +99,9 @@ def signOut(studentID):
     result = service.spreadsheets().values().update(spreadsheetId=SPREADSHEET_ID, range=range, valueInputOption='RAW', body=body).execute() # Execute spreadsheet update
 
     # Output Result
-    signedOutDict[studentID] = {"lName": student["lName"], "fName": student["fName"]} # Add student to logged in dict
-    signedInDict.pop(studentID) # Remove student from signed in dictionary
-    print('{0} cells updated.'.format(result.get('updatedCells')));
+    print('{0} cells updated.'.format(result.get('updatedCells')))
     print(str(student["lName"]) + ", " + str(student["fName"]) + " signed out at " + timestamp.strftime("%x %X"))
-    idTextBox.delete(0, END) # Clear text field for next entry
-    idTextBox.focus() # Apply focus to entry field
+    
 
 def updateClock(): # Update date and time labels every minutes
     #Update time label
